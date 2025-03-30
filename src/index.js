@@ -79,6 +79,7 @@ function createLoadingOverlay() {
       </div>
       <div class="quantum-loading-status" id="loading-status-text">Initializing quantum system...</div>
     </div>
+    <button id="skip-loading-button" class="skip-loading-button">SKIP</button>
   `;
   
   // Add loading overlay styles
@@ -96,6 +97,25 @@ function createLoadingOverlay() {
       justify-content: center;
       z-index: 9999;
       transition: opacity 1s ease;
+    }
+    
+    .skip-loading-button {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      padding: 8px 16px;
+      background-color: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: rgba(255, 255, 255, 0.5);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .skip-loading-button:hover {
+      border-color: rgba(255, 45, 85, 0.8);
+      color: rgba(255, 45, 85, 0.8);
     }
     
     .quantum-loading-content {
@@ -164,6 +184,52 @@ function createLoadingOverlay() {
   `;
   
   document.head.appendChild(style);
+  
+  // Add event listener for skip button
+  setTimeout(() => {
+    const skipButton = overlay.querySelector('#skip-loading-button');
+    if (skipButton) {
+      skipButton.addEventListener('click', () => {
+        // Complete the progress bar immediately
+        const progressBar = overlay.querySelector('#loading-progress-bar');
+        if (progressBar) {
+          progressBar.style.width = '100%';
+        }
+        
+        // Update status text
+        const statusText = overlay.querySelector('#loading-status-text');
+        if (statusText) {
+          statusText.textContent = 'System ready.';
+        }
+        
+        // Fade out the overlay
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+          if (overlay.parentNode) {
+            overlay.parentNode.removeChild(overlay);
+          }
+          
+          // Initialize interface if not already done
+          if (!window.quantumInterface) {
+            const rootElement = document.getElementById('quantum-app-root');
+            if (rootElement) {
+              const quantumInterface = new QuantumInterface(rootElement, {
+                dimensions: 2,
+                resolution: 128,
+                initialState: 'superposition',
+                potentialType: 'harmonic',
+                boundaryCondition: 'periodic',
+                useGPU: hasWebGLSupport()
+              });
+              
+              // Store interface reference for debugging
+              window.quantumInterface = quantumInterface;
+            }
+          }
+        }, 1000);
+      });
+    }
+  }, 500);
   
   return overlay;
 }

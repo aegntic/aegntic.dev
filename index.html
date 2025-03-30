@@ -1142,21 +1142,21 @@
                             <div class="tool-icon">⚡</div>
                             <h3 class="tool-title">Pattern Generator</h3>
                             <p class="tool-description">Create complex, mathematically-derived patterns based on ancient geometric principles.</p>
-                            <a href="#" class="tool-button">Launch tool</a>
+                            <a href="./tools/pattern-generator.html" class="tool-button">Launch tool</a>
                         </div>
                         
                         <div class="tool-card">
                             <div class="tool-icon">🧠</div>
                             <h3 class="tool-title">Neural Prototyper</h3>
                             <p class="tool-description">Rapidly prototype ideas using machine learning algorithms trained on innovative design patterns.</p>
-                            <a href="#" class="tool-button">Launch tool</a>
+                            <a href="./tools/neural-prototyper.html" class="tool-button">Launch tool</a>
                         </div>
                         
                         <div class="tool-card">
                             <div class="tool-icon">🌐</div>
                             <h3 class="tool-title">Quantum Explorer</h3>
                             <p class="tool-description">Visualize and interact with quantum-inspired data structures and alternative geometries.</p>
-                            <a href="#" class="tool-button">Launch tool</a>
+                            <a href="./tools/quantum-explorer.html" class="tool-button">Launch tool</a>
                         </div>
                     </div>
                 </div>
@@ -1622,16 +1622,22 @@
                 visualizerGrid.addEventListener('click', () => {
                     cancelAnimationFrame(animationFrame);
                     drawGrid();
+                    // Link to Pattern Generator tool
+                    window.location.href = './tools/pattern-generator.html';
                 });
                 
                 visualizerWave.addEventListener('click', () => {
                     cancelAnimationFrame(animationFrame);
                     drawWaveform();
+                    // Link to Neural Prototyper tool
+                    window.location.href = './tools/neural-prototyper.html';
                 });
                 
                 visualizerParticles.addEventListener('click', () => {
                     cancelAnimationFrame(animationFrame);
                     drawParticles();
+                    // Link to Quantum Explorer tool
+                    window.location.href = './tools/quantum-explorer.html';
                 });
                 
                 function drawWaveform() {
