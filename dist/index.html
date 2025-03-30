@@ -1,0 +1,1451 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AEGNTIC | Quantum Tartarian Interface</title><style>@import url('https://fonts.cdnjs.com/css2?family=Space+Mono:wght@400;700&family=Syncopate:wght@400;700&display=swap');
+        
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #090909;
+            --accent-primary: #fd113c;
+            --accent-secondary: #1b9dda;
+            --accent-tertiary: #220bf4;
+            --grid-color: rgba(255, 45, 83, 0.079);
+            --text-primary: rgba(255, 255, 255, 0.92);
+            --text-secondary: rgba(255, 255, 255, 0.62);
+            --font-display: 'Syncopate', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --glitch-intensity: 0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            overflow-x: hidden;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            cursor: none; /* Hide default cursor */
+        }
+        
+        /* Custom cursor */
+        #cursor-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 10000;
+            mix-blend-mode: difference;
+        }
+        
+        #cursor {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            margin: -6px 0 0 -6px;
+            border: 1px solid var(--accent-primary);
+            border-radius: 50%;
+            transition: width 0.3s, height 0.3s, margin 0.3s, background-color 0.3s;
+        }
+        
+        #cursor.hover {
+            width: 60px;
+            height: 60px;
+            margin: -30px 0 0 -30px;
+            background-color: rgba(255, 45, 85, 0.1);
+        }
+        
+        #cursor-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            margin: -2px 0 0 -2px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+        }
+        
+        /* Terminal window */
+        #terminal {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 400px;
+            height: 300px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--accent-primary);
+            padding: 10px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--accent-secondary);
+            overflow: hidden;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(350px);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        #terminal.active {
+            transform: translateY(0);
+        }
+        
+        #terminal-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid var(--accent-primary);
+        }
+        
+        #terminal-title {
+            color: var(--accent-primary);
+            font-weight: bold;
+        }
+        
+        #terminal-toggle {
+            position: absolute;
+            bottom: 310px;
+            right: 20px;
+            width: 120px;
+            height: 30px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--accent-primary);
+            border-bottom: none;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            cursor: pointer;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #terminal-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        #terminal-content::-webkit-scrollbar {
+            width: 3px;
+        }
+        
+        #terminal-content::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+        }
+        
+        #terminal-content::-webkit-scrollbar-thumb {
+            background: var(--accent-primary);
+        }
+        
+        #terminal-input-container {
+            display: flex;
+            margin-top: 10px;
+        }
+        
+        #terminal-prompt {
+            color: var(--accent-primary);
+            margin-right: 5px;
+        }
+        
+        #terminal-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            outline: none;
+        }
+        
+        /* Quantum Grid */
+        #quantum-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        /* Loading / Initialization Sequence */
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #loading.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        #loading-content {
+            width: 80%;
+            max-width: 800px;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+        }
+        
+        #loading-progress-container {
+            width: 100%;
+            height: 2px;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
+        }
+        
+        #loading-progress {
+            height: 100%;
+            width: 0;
+            background-color: var(--accent-primary);
+            transition: width 0.2s ease;
+        }
+        
+        #loading-status {
+            margin-top: 10px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        /* Main container */
+        .container {
+            min-height: 100vh;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+        
+        /* Navigation */
+        #nav-system {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 100;
+        }
+        
+        #nav-toggle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent-primary);
+            background-color: transparent;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #nav-toggle:hover {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        #nav-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.9);
+            border-right: 1px solid var(--accent-primary);
+            z-index: 99;
+            transform: translateX(-100%);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            padding: 120px 40px 40px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #nav-panel.active {
+            transform: translateX(0);
+        }
+        
+        .nav-link {
+            display: block;
+            color: var(--text-primary);
+            text-decoration: none;
+            font-family: var(--font-display);
+            font-size: 16px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            padding: 5px;
+        }
+        
+        .nav-link::before {
+            content: "> ";
+            color: var(--accent-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .nav-link:hover::before {
+            opacity: 1;
+        }
+        
+        .nav-link::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background-color: var(--accent-primary);
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        .nav-link:hover::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+        
+        /* Logo */
+        #logo {
+            position: fixed;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            font-family: var(--font-display);
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        
+        #logo span {
+            color: var(--accent-primary);
+        }
+        
+        /* Sections Container */
+        #sections-container {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+            overflow: hidden;
+        }
+        
+        .section.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .section-content {
+            max-width: 1200px;
+            width: 100%;
+            padding: 0 40px;
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.8s ease, opacity 0.8s ease;
+        }
+        
+        .section.active .section-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Home Section */
+        #home-section {
+            perspective: 1000px;
+        }
+        
+        #home-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-position: center;
+            background-size: cover;
+            filter: brightness(0.3);
+        }
+        
+        #home-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            max-width: 800px;
+        }
+        
+        #home-title {
+            font-family: var(--font-display);
+            font-size: 64px;
+            line-height: 1.2;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        #home-title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: var(--accent-primary);
+        }
+        
+        #home-subtitle {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 50px;
+            color: var(--text-secondary);
+        }
+        
+        .glitch-effect {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .glitch-effect::before,
+        .glitch-effect::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: calc(0.8 * var(--glitch-intensity));
+        }
+        
+        .glitch-effect::before {
+            color: var(--accent-primary);
+            z-index: -1;
+            transform: translateX(calc(-2px * var(--glitch-intensity)));
+        }
+        
+        .glitch-effect::after {
+            color: var(--accent-secondary);
+            z-index: -2;
+            transform: translateX(calc(2px * var(--glitch-intensity)));
+        }
+        
+        /* Projects section */
+        #projects-section {
+            overflow-y: auto;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 80px;
+        }
+        
+        .project-card {
+            position: relative;
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            height: 300px;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            transition: transform 0.5s ease;
+        }
+        
+        .project-card:hover {
+            transform: scale(1.02) translateZ(10px);
+        }
+        
+        .project-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+            transition: opacity 0.5s ease;
+        }
+        
+        .project-card:hover .project-image {
+            opacity: 0.9;
+        }
+        
+        .project-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            transform: translateY(100%);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+        }
+        
+        .project-card:hover .project-info {
+            transform: translateY(0);
+        }
+        
+        .project-title {
+            font-family: var(--font-display);
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: 700;
+        }
+        
+        .project-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .project-status {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        /* Gallery section */
+        .gallery-container {
+            margin-top: 80px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .gallery-item {
+            flex: 1 0 300px;
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .gallery-item.wide {
+            flex: 2 0 600px;
+        }
+        
+        .gallery-item.tall {
+            height: 500px;
+        }
+        
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover .gallery-image {
+            transform: scale(1.05);
+        }
+        
+        .gallery-caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+            transform: translateY(100%);
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover .gallery-caption {
+            transform: translateY(0);
+        }
+        
+        /* Tools section */
+        .tools-container {
+            margin-top: 80px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+        }
+        
+        .tool-card {
+            border: 1px solid rgba(247, 6, 50, 0.3);
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s ease, box-shadow 0.5s ease;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(255, 45, 85, 0.1);
+        }
+        
+        .tool-icon {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: var(--accent-primary);
+            filter: drop-shadow(0 0 5px var(--accent-primary));
+        }
+        
+        .tool-title {
+            font-family: var(--font-display);
+            font-size: 20px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .tool-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .tool-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .tool-button:hover {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        /* Contact section */
+        .contact-container {
+            margin-top: 80px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+        }
+        
+        .contact-info {
+            color: var(--text-secondary);
+        }
+        
+        .contact-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-input,
+        .form-textarea {
+            width: 100%;
+            padding: 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 45, 85, 0.3);
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-input:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+        
+        .form-label {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            pointer-events: none;
+            transition: transform 0.3s ease, color 0.3s ease, font-size 0.3s ease;
+        }
+        
+        .form-input:focus + .form-label,
+        .form-input:not(:placeholder-shown) + .form-label,
+        .form-textarea:focus + .form-label,
+        .form-textarea:not(:placeholder-shown) + .form-label {
+            transform: translateY(-25px);
+            font-size: 12px;
+            color: var(--accent-primary);
+        }
+        
+        .form-button {
+            padding: 12px 24px;
+            background-color: transparent;
+            border: 1px solid var(--accent-primary);
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            align-self: flex-start;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .form-button:hover {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        /* Data Visualizer */
+        #data-visualizer {
+            position: fixed;
+            top: 40px;
+            right: 40px;
+            z-index: 100;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .visualizer-toggle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent-secondary);
+            background-color: transparent;
+            color: var(--accent-secondary);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .visualizer-toggle:hover {
+            background-color: var(--accent-secondary);
+            color: var(--bg-primary);
+        }
+        
+        /* Modal */
+        #modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        #modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+        
+        #modal-image {
+            max-width: 100%;
+            max-height: 90vh;
+            border: 1px solid var(--accent-primary);
+        }
+        
+        #modal-caption {
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        #modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--accent-primary);
+            background-color: transparent;
+            color: var(--accent-primary);
+            font-family: var(--font-mono);
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #modal-close:hover {
+            background-color: var(--accent-primary);
+            color: var(--bg-primary);
+        }
+        
+        /* Noise effect */
+        #noise {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.05;
+            z-index: 10;
+        }
+        
+        /* Audio controls */
+        #audio-control {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        #audio-toggle {
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--text-secondary);
+            background-color: transparent;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        #audio-toggle:hover {
+            background-color: var(--text-secondary);
+            color: var(--bg-primary);
+        }
+        
+        #audio-info {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Section title */
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .section-title::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100px;
+            height: 2px;
+            background-color: var(--accent-primary);
+        }
+        
+        /* Responsive adjustments */
+        @media screen and (max-width: 1200px) {
+            #home-title {
+                font-size: 48px;
+            }
+        }
+        
+        @media screen and (max-width: 992px) {
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+            
+            #terminal {
+                width: 300px;
+            }
+        }
+        
+        @media screen and (max-width: 768px) {
+            #home-title {
+                font-size: 36px;
+            }
+            
+            .projects-grid,
+            .tools-container {
+                grid-template-columns: 1fr;
+            }
+            
+            #nav-panel {
+                width: 100%;
+            }
+            
+            #logo {
+                font-size: 16px;
+            }
+            
+            #terminal {
+                width: calc(100% - 40px);
+                right: 20px;
+                bottom: 20px;
+            }
+            
+            #terminal-toggle {
+                width: 80px;
+                right: 20px;
+            }
+        }
+        
+        @media screen and (max-width: 480px) {
+            #home-title {
+                font-size: 28px;
+            }
+            
+            #home-subtitle {
+                font-size: 16px;
+            }
+            
+            .section-title {
+                font-size: 28px;
+            }
+        }</style><script defer="defer" src="bundle.cb5eaf89cbf011e7e408.js"></script></head><body><div id="loading"><div id="loading-content"><div id="loading-text"></div><div id="loading-progress-container"><div id="loading-progress"></div></div><div id="loading-status">Initializing system...</div></div></div><div id="cursor-container"><div id="cursor"></div><div id="cursor-dot"></div></div><canvas id="noise"></canvas><canvas id="quantum-grid"></canvas><button id="terminal-toggle">TERMINAL</button><div id="terminal"><div id="terminal-header"><div id="terminal-title">AEGNTIC COMMAND LINE</div><div id="terminal-actions">v1.0.0</div></div><div id="terminal-content"></div><div id="terminal-input-container"><div id="terminal-prompt">></div><input id="terminal-input" spellcheck="false" autocomplete="off"></div></div><div class="container"><div id="nav-system"><button id="nav-toggle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 1h14M0 7h14M0 13h14" stroke="currentColor" stroke-width="2"/></svg></button></div><div id="nav-panel"><a href="#home" class="nav-link" data-section="home-section">HOME</a> <a href="#projects" class="nav-link" data-section="projects-section">PROJECTS</a> <a href="#gallery" class="nav-link" data-section="gallery-section">GALLERY</a> <a href="#tools" class="nav-link" data-section="tools-section">TOOLS</a> <a href="#contact" class="nav-link" data-section="contact-section">CONTACT</a></div><a href="#home" id="logo" data-section="home-section"><span>AEG</span>NTIC</a><div id="audio-control"><button id="audio-toggle"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 5v4h3l4 4V1L3 5H0z" fill="currentColor"/><path d="M11 7c0-1.1-.9-2-2-2v4c1.1 0 2-.9 2-2z" fill="currentColor"/><path d="M9 1v2c2.2 0 4 1.8 4 4s-1.8 4-4 4v2c3.3 0 6-2.7 6-6s-2.7-6-6-6z" fill="currentColor"/></svg></button><div id="audio-info">AMBIENT SOUNDTRACK | 00:00 / 00:00</div></div><div id="data-visualizer"><button class="visualizer-toggle" id="visualizer-grid"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h6v6H0zM8 0h6v6H8zM0 8h6v6H0zM8 8h6v6H8z" stroke="currentColor" stroke-width="1"/></svg></button> <button class="visualizer-toggle" id="visualizer-wave"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 7h2c1 0 1 1 2 1s1-2 2-2 1 2 2 2 1-1 2-1h4" stroke="currentColor" stroke-width="1"/></svg></button> <button class="visualizer-toggle" id="visualizer-particles"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="7" r="2" fill="currentColor"/><circle cx="2" cy="4" r="1" fill="currentColor"/><circle cx="12" cy="3" r="1" fill="currentColor"/><circle cx="4" cy="11" r="1" fill="currentColor"/><circle cx="10" cy="10" r="1" fill="currentColor"/></svg></button></div><div id="sections-container"><section id="home-section" class="section active"><div id="home-bg"></div><div class="section-content" id="home-content"><h1 id="home-title" class="glitch-effect" data-text="ACCESS ECOSYSTEMS GROWING NATURALLY THROUGH INTELLIGENT CREATIVITY">ACCESS ECOSYSTEMS GROWING NATURALLY THROUGH INTELLIGENT CREATIVITY</h1><p id="home-subtitle">Explore the boundary where ancient knowledge meets future technology, redefined through quantum creativity</p></div></section><section id="projects-section" class="section"><div class="section-content"><h2 class="section-title">Current Projects</h2><div class="projects-grid"><div class="project-card"><img src="https://source.unsplash.com/random/800x600/?cyborg" alt="Quantum Engine" class="project-image"><div class="project-info"><h3 class="project-title">Quantum Engine</h3><p class="project-description">A new approach to procedural generation using quantum algorithms to create truly unpredictable worlds and structures.</p><div class="project-status">87% complete</div></div></div><div class="project-card"><img src="https://source.unsplash.com/random/800x600/?neural" alt="Neural Canvas" class="project-image"><div class="project-info"><h3 class="project-title">Neural Canvas</h3><p class="project-description">An AI-powered drawing tool that interprets your imagination and helps visualize concepts through collaborative creation.</p><div class="project-status">Live Beta</div></div></div><div class="project-card"><img src="https://source.unsplash.com/random/800x600/?ancient" alt="Tartarian Architect" class="project-image"><div class="project-info"><h3 class="project-title">Tartarian Architect</h3><p class="project-description">Rediscovering the lost building techniques of ancient advanced civilizations through computational archaeology.</p><div class="project-status">Research Phase</div></div></div></div></div></section><section id="gallery-section" class="section"><div class="section-content"><h2 class="section-title">Gallery</h2><div class="gallery-container"><div class="gallery-item wide"><img src="https://source.unsplash.com/random/1200x600/?futuristic,architecture" alt="Tartarian architecture concept" class="gallery-image"><div class="gallery-caption">Tartarian architecture concept visualization</div></div><div class="gallery-item"><img src="https://source.unsplash.com/random/600x600/?geometric,logo" alt="aegntic geometric brand identity" class="gallery-image"><div class="gallery-caption">aegntic identity system - geometric variant</div></div><div class="gallery-item"><img src="https://source.unsplash.com/random/600x600/?quantum,pattern" alt="Quantum pattern system" class="gallery-image"><div class="gallery-caption">Quantum pattern system</div></div><div class="gallery-item tall"><img src="https://source.unsplash.com/random/600x1200/?interface,future" alt="Ancient-future interface concept" class="gallery-image"><div class="gallery-caption">Ancient-future interface concept</div></div><div class="gallery-item"><img src="https://source.unsplash.com/random/600x600/?organic,logo" alt="aegntic organic brand identity" class="gallery-image"><div class="gallery-caption">aegntic identity system - organic variant</div></div><div class="gallery-item"><img src="https://source.unsplash.com/random/600x600/?procedural,landscape" alt="Procedural environment render" class="gallery-image"><div class="gallery-caption">Procedural environment render</div></div></div></div></section><section id="tools-section" class="section"><div class="section-content"><h2 class="section-title">Tools & Applications</h2><div class="tools-container"><div class="tool-card"><div class="tool-icon">⚡</div><h3 class="tool-title">Pattern Generator</h3><p class="tool-description">Create complex, mathematically-derived patterns based on ancient geometric principles.</p><a href="./tools/pattern-generator.html" class="tool-button">Launch tool</a></div><div class="tool-card"><div class="tool-icon">🧠</div><h3 class="tool-title">Neural Prototyper</h3><p class="tool-description">Rapidly prototype ideas using machine learning algorithms trained on innovative design patterns.</p><a href="./tools/neural-prototyper.html" class="tool-button">Launch tool</a></div><div class="tool-card"><div class="tool-icon">🌐</div><h3 class="tool-title">Quantum Explorer</h3><p class="tool-description">Visualize and interact with quantum-inspired data structures and alternative geometries.</p><a href="./tools/quantum-explorer.html" class="tool-button">Launch tool</a></div></div></div></section><section id="contact-section" class="section"><div class="section-content"><h2 class="section-title">Contact</h2><div class="contact-container"><div class="contact-info"><p>Interested in collaborating or have questions about any of the projects? Get in touch.</p><p>We're always looking for visionaries, creatives, and technical minds to join our quest to bridge ancient wisdom with future technology.</p><p>Based globally, operating beyond conventional boundaries.</p></div><form class="contact-form"><div class="form-group"><input id="name" class="form-input" placeholder=" "> <label for="name" class="form-label">NAME</label></div><div class="form-group"><input type="email" id="email" class="form-input" placeholder=" "> <label for="email" class="form-label">EMAIL</label></div><div class="form-group"><textarea id="message" class="form-textarea" placeholder=" "></textarea> <label for="message" class="form-label">MESSAGE</label></div><button type="submit" class="form-button">SEND MESSAGE</button></form></div></div></section></div></div><div id="modal"><div id="modal-content"><img id="modal-image" src="" alt=""><div id="modal-caption"></div><button id="modal-close">X</button></div></div><script>// Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Loading sequence
+            const loadingText = document.getElementById('loading-text');
+            const loadingProgress = document.getElementById('loading-progress');
+            const loadingStatus = document.getElementById('loading-status');
+            const loading = document.getElementById('loading');
+            
+            // Simulating loading with dynamic text display
+            const systemComponents = [
+                "Initializing quantum interface core...",
+                "Loading tartarian architectural database...",
+                "Calibrating neural networks...",
+                "Establishing temporal synchronization...",
+                "Rendering dimensional grid framework...",
+                "Activating ambient system acoustics...",
+                "Optimizing perception matrices...",
+                "Indexing ancient knowledge databases...",
+                "Integrating future technology protocols...",
+                "System initialization complete."
+            ];
+            
+            let componentIndex = 0;
+            let charIndex = 0;
+            let currentText = '';
+            const typeSpeed = 30; // milliseconds per character
+            
+            function typeWriter() {
+                if (componentIndex < systemComponents.length) {
+                    if (charIndex < systemComponents[componentIndex].length) {
+                        currentText += systemComponents[componentIndex].charAt(charIndex);
+                        loadingText.innerHTML = `<span style="color: var(--accent-primary);">[SYSTEM]</span> ${currentText}`;
+                        charIndex++;
+                        setTimeout(typeWriter, typeSpeed);
+                    } else {
+                        componentIndex++;
+                        charIndex = 0;
+                        currentText = '';
+                        
+                        // Update progress bar
+                        const progress = (componentIndex / systemComponents.length) * 100;
+                        loadingProgress.style.width = `${progress}%`;
+                        
+                        if (componentIndex < systemComponents.length) {
+                            setTimeout(typeWriter, 500);
+                            loadingStatus.textContent = `Loading component ${componentIndex} of ${systemComponents.length}...`;
+                        } else {
+                            loadingStatus.textContent = "Initialization complete. Launching system...";
+                            setTimeout(() => {
+                                loading.classList.add('hidden');
+                                initializeSystem();
+                            }, 1000);
+                        }
+                    }
+                }
+            }
+            
+            // Start the loading sequence
+            typeWriter();
+            
+            // Initialize the system after loading
+            function initializeSystem() {
+                // Terminal functionality
+                const terminal = document.getElementById('terminal');
+                const terminalToggle = document.getElementById('terminal-toggle');
+                const terminalContent = document.getElementById('terminal-content');
+                const terminalInput = document.getElementById('terminal-input');
+                
+                // Terminal toggle
+                terminalToggle.addEventListener('click', () => {
+                    terminal.classList.toggle('active');
+                    if (terminal.classList.contains('active')) {
+                        terminalInput.focus();
+                        addTerminalLine("Welcome to AEGNTIC Command Line Interface", "system");
+                        addTerminalLine("Type 'help' for available commands", "system");
+                    }
+                });
+                
+                // Terminal commands
+                terminalInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        const command = terminalInput.value.trim();
+                        addTerminalLine(`> ${command}`, "user");
+                        processCommand(command);
+                        terminalInput.value = '';
+                    }
+                });
+                
+                function addTerminalLine(text, type = "system") {
+                    const line = document.createElement('div');
+                    if (type === "system") {
+                        line.innerHTML = `<span style="color: var(--accent-secondary);">[SYSTEM]</span> ${text}`;
+                    } else if (type === "error") {
+                        line.innerHTML = `<span style="color: var(--accent-primary);">[ERROR]</span> ${text}`;
+                    } else {
+                        line.textContent = text;
+                    }
+                    terminalContent.appendChild(line);
+                    terminalContent.scrollTop = terminalContent.scrollHeight;
+                }
+                
+                function processCommand(command) {
+                    const commands = {
+                        'help': () => {
+                            addTerminalLine("Available commands:", "system");
+                            addTerminalLine("help - Show this help message", "system");
+                            addTerminalLine("clear - Clear the terminal", "system");
+                            addTerminalLine("about - Show information about AEGNTIC", "system");
+                            addTerminalLine("projects - List current projects", "system");
+                            addTerminalLine("nav [section] - Navigate to section", "system");
+                            addTerminalLine("glitch [on|off] - Toggle glitch effect", "system");
+                            addTerminalLine("matrix - ???", "system");
+                        },
+                        'clear': () => {
+                            terminalContent.innerHTML = '';
+                        },
+                        'about': () => {
+                            addTerminalLine("AEGNTIC: Access Ecosystems Growing Naturally Through Intelligent Creativity", "system");
+                            addTerminalLine("A platform for exploring the boundary between ancient knowledge and future technology", "system");
+                            addTerminalLine("Version 1.0.0", "system");
+                        },
+                        'projects': () => {
+                            addTerminalLine("Current projects:", "system");
+                            addTerminalLine("1. Quantum Engine - 87% complete", "system");
+                            addTerminalLine("2. Neural Canvas - Live Beta", "system");
+                            addTerminalLine("3. Tartarian Architect - Research Phase", "system");
+                        },
+                        'nav': (args) => {
+                            if (args.length === 0) {
+                                addTerminalLine("Usage: nav [home|projects|gallery|tools|contact]", "error");
+                                return;
+                            }
+                            
+                            const section = args[0].toLowerCase();
+                            const validSections = ['home', 'projects', 'gallery', 'tools', 'contact'];
+                            
+                            if (validSections.includes(section)) {
+                                addTerminalLine(`Navigating to ${section} section...`, "system");
+                                document.querySelector(`.nav-link[data-section="${section}-section"]`).click();
+                            } else {
+                                addTerminalLine(`Invalid section: ${section}`, "error");
+                            }
+                        },
+                        'glitch': (args) => {
+                            if (args.length === 0 || !['on', 'off'].includes(args[0].toLowerCase())) {
+                                addTerminalLine("Usage: glitch [on|off]", "error");
+                                return;
+                            }
+                            
+                            const root = document.documentElement;
+                            if (args[0].toLowerCase() === 'on') {
+                                root.style.setProperty('--glitch-intensity', '1');
+                                addTerminalLine("Glitch effect enabled", "system");
+                            } else {
+                                root.style.setProperty('--glitch-intensity', '0');
+                                addTerminalLine("Glitch effect disabled", "system");
+                            }
+                        },
+                        'matrix': () => {
+                            addTerminalLine("Initializing Matrix simulation...", "system");
+                            setTimeout(() => {
+                                addTerminalLine("Wake up, Neo...", "system");
+                                setTimeout(() => {
+                                    addTerminalLine("The Matrix has you...", "system");
+                                    setTimeout(() => {
+                                        addTerminalLine("Follow the white rabbit.", "system");
+                                        setTimeout(() => {
+                                            addTerminalLine("Knock, knock, Neo.", "system");
+                                        }, 1500);
+                                    }, 1500);
+                                }, 1500);
+                            }, 1500);
+                        }
+                    };
+                    
+                    const parts = command.split(' ');
+                    const cmd = parts[0].toLowerCase();
+                    const args = parts.slice(1);
+                    
+                    if (commands[cmd]) {
+                        commands[cmd](args);
+                    } else if (cmd) {
+                        addTerminalLine(`Command not found: ${cmd}`, "error");
+                    }
+                }
+                
+                // Custom cursor
+                const cursor = document.getElementById('cursor');
+                const cursorDot = document.getElementById('cursor-dot');
+                const cursorContainer = document.getElementById('cursor-container');
+                
+                document.addEventListener('mousemove', (e) => {
+                    cursorContainer.style.transform = `translate(${e.clientX}px, ${e.clientY}px)`;
+                });
+                
+                // Cursor hover effect
+                const interactiveElements = document.querySelectorAll('a, button, .project-card, .gallery-item, .tool-card, input, textarea, #terminal-toggle');
+                
+                interactiveElements.forEach((el) => {
+                    el.addEventListener('mouseenter', () => {
+                        cursor.classList.add('hover');
+                    });
+                    
+                    el.addEventListener('mouseleave', () => {
+                        cursor.classList.remove('hover');
+                    });
+                });
+                
+                // Navigation
+                const navToggle = document.getElementById('nav-toggle');
+                const navPanel = document.getElementById('nav-panel');
+                const navLinks = document.querySelectorAll('.nav-link');
+                const sections = document.querySelectorAll('.section');
+                
+                navToggle.addEventListener('click', () => {
+                    navPanel.classList.toggle('active');
+                });
+                
+                navLinks.forEach((link) => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        
+                        const targetSection = link.getAttribute('data-section');
+                        
+                        // Hide all sections
+                        sections.forEach((section) => {
+                            section.classList.remove('active');
+                        });
+                        
+                        // Show target section
+                        document.getElementById(targetSection).classList.add('active');
+                        
+                        // Close nav panel
+                        navPanel.classList.remove('active');
+                    });
+                });
+                
+                // Logo navigation
+                document.getElementById('logo').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    const targetSection = e.target.getAttribute('data-section') || 'home-section';
+                    
+                    // Hide all sections
+                    sections.forEach((section) => {
+                        section.classList.remove('active');
+                    });
+                    
+                    // Show target section
+                    document.getElementById(targetSection).classList.add('active');
+                });
+                
+                // Gallery modal
+                const galleryItems = document.querySelectorAll('.gallery-item');
+                const modal = document.getElementById('modal');
+                const modalImage = document.getElementById('modal-image');
+                const modalCaption = document.getElementById('modal-caption');
+                const modalClose = document.getElementById('modal-close');
+                
+                galleryItems.forEach((item) => {
+                    item.addEventListener('click', () => {
+                        const image = item.querySelector('.gallery-image');
+                        const caption = item.querySelector('.gallery-caption');
+                        
+                        modalImage.src = image.src;
+                        modalCaption.textContent = caption.textContent;
+                        
+                        modal.classList.add('active');
+                    });
+                });
+                
+                modalClose.addEventListener('click', () => {
+                    modal.classList.remove('active');
+                });
+                
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+                
+                // Audio control
+                const audioToggle = document.getElementById('audio-toggle');
+                const audioInfo = document.getElementById('audio-info');
+                let audio = null;
+                let audioPlaying = false;
+                
+                audioToggle.addEventListener('click', () => {
+                    if (!audio) {
+                        // Create audio element
+                        audio = new Audio('https://cdn.freesound.org/previews/475/475516_8365076-lq.mp3'); // Sample ambient sound
+                        audio.loop = true;
+                        
+                        // Update audio time display
+                        audio.addEventListener('timeupdate', () => {
+                            const currentMinutes = Math.floor(audio.currentTime / 60).toString().padStart(2, '0');
+                            const currentSeconds = Math.floor(audio.currentTime % 60).toString().padStart(2, '0');
+                            const totalMinutes = Math.floor(audio.duration / 60).toString().padStart(2, '0');
+                            const totalSeconds = Math.floor(audio.duration % 60).toString().padStart(2, '0');
+                            
+                            audioInfo.textContent = `AMBIENT SOUNDTRACK | ${currentMinutes}:${currentSeconds} / ${totalMinutes}:${totalSeconds}`;
+                        });
+                    }
+                    
+                    if (audioPlaying) {
+                        audio.pause();
+                        audioToggle.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 5v4h3l4 4V1L3 5H0z" fill="currentColor"/>
+                                <path d="M11 7c0-1.1-.9-2-2-2v4c1.1 0 2-.9 2-2z" fill="currentColor"/>
+                                <path d="M9 1v2c2.2 0 4 1.8 4 4s-1.8 4-4 4v2c3.3 0 6-2.7 6-6s-2.7-6-6-6z" fill="currentColor"/>
+                            </svg>
+                        `;
+                        audioPlaying = false;
+                    } else {
+                        audio.play();
+                        audioToggle.innerHTML = `
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M0 5v4h3l4 4V1L3 5H0z" fill="currentColor"/>
+                                <path d="M14 7l-2-2v4l2-2z" fill="currentColor"/>
+                                <path d="M9 1v12l2-2V3l-2-2z" fill="currentColor"/>
+                            </svg>
+                        `;
+                        audioPlaying = true;
+                    }
+                });
+                
+                // Quantum Grid visualization
+                const quantumGrid = document.getElementById('quantum-grid');
+                const ctx = quantumGrid.getContext('2d');
+                let animationFrame;
+                
+                function resizeCanvas() {
+                    quantumGrid.width = window.innerWidth;
+                    quantumGrid.height = window.innerHeight;
+                }
+                
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                
+                function drawGrid() {
+                    ctx.clearRect(0, 0, quantumGrid.width, quantumGrid.height);
+                    
+                    const gridSize = 50;
+                    const time = Date.now() * 0.001;
+                    
+                    ctx.strokeStyle = 'var(--grid-color)';
+                    ctx.lineWidth = 1;
+                    
+                    // Vertical lines
+                    for (let x = 0; x < quantumGrid.width; x += gridSize) {
+                        ctx.beginPath();
+                        ctx.moveTo(x + Math.sin(time + x * 0.01) * 5, 0);
+                        ctx.lineTo(x + Math.sin(time + x * 0.01 + quantumGrid.height * 0.01) * 5, quantumGrid.height);
+                        ctx.stroke();
+                    }
+                    
+                    // Horizontal lines
+                    for (let y = 0; y < quantumGrid.height; y += gridSize) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, y + Math.cos(time + y * 0.01) * 5);
+                        ctx.lineTo(quantumGrid.width, y + Math.cos(time + y * 0.01 + quantumGrid.width * 0.01) * 5);
+                        ctx.stroke();
+                    }
+                    
+                    animationFrame = requestAnimationFrame(drawGrid);
+                }
+                
+                // Start the grid animation
+                drawGrid();
+                
+                // Noise effect
+                const noiseCanvas = document.getElementById('noise');
+                const noiseCtx = noiseCanvas.getContext('2d');
+                
+                function resizeNoiseCanvas() {
+                    noiseCanvas.width = window.innerWidth;
+                    noiseCanvas.height = window.innerHeight;
+                }
+                
+                resizeNoiseCanvas();
+                window.addEventListener('resize', resizeNoiseCanvas);
+                
+                function drawNoise() {
+                    const imageData = noiseCtx.createImageData(noiseCanvas.width, noiseCanvas.height);
+                    const data = imageData.data;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        const value = Math.random() * 255;
+                        data[i] = value;
+                        data[i + 1] = value;
+                        data[i + 2] = value;
+                        data[i + 3] = 25; // Semi-transparent
+                    }
+                    
+                    noiseCtx.putImageData(imageData, 0, 0);
+                    requestAnimationFrame(drawNoise);
+                }
+                
+                // Start the noise effect
+                drawNoise();
+                
+                // Home background effect
+                const homeBg = document.getElementById('home-bg');
+                homeBg.style.backgroundImage = "url('https://source.unsplash.com/random/1920x1080/?futuristic,architecture')";
+                
+                // Data visualizer controls
+                const visualizerGrid = document.getElementById('visualizer-grid');
+                const visualizerWave = document.getElementById('visualizer-wave');
+                const visualizerParticles = document.getElementById('visualizer-particles');
+                
+                visualizerGrid.addEventListener('click', () => {
+                    cancelAnimationFrame(animationFrame);
+                    drawGrid();
+                    // Link to Pattern Generator tool
+                    window.location.href = './tools/pattern-generator.html';
+                });
+                
+                visualizerWave.addEventListener('click', () => {
+                    cancelAnimationFrame(animationFrame);
+                    drawWaveform();
+                    // Link to Neural Prototyper tool
+                    window.location.href = './tools/neural-prototyper.html';
+                });
+                
+                visualizerParticles.addEventListener('click', () => {
+                    cancelAnimationFrame(animationFrame);
+                    drawParticles();
+                    // Link to Quantum Explorer tool
+                    window.location.href = './tools/quantum-explorer.html';
+                });
+                
+                function drawWaveform() {
+                    ctx.clearRect(0, 0, quantumGrid.width, quantumGrid.height);
+                    
+                    const time = Date.now() * 0.001;
+                    const centerY = quantumGrid.height / 2;
+                    
+                    ctx.strokeStyle = 'var(--accent-secondary)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    for (let x = 0; x < quantumGrid.width; x++) {
+                        const y = centerY + Math.sin(x * 0.01 + time) * 50 + Math.sin(x * 0.02 + time * 1.5) * 25;
+                        if (x === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                    
+                    // Additional waveform
+                    ctx.strokeStyle = 'var(--accent-primary)';
+                    ctx.beginPath();
+                    
+                    for (let x = 0; x < quantumGrid.width; x++) {
+                        const y = centerY + Math.cos(x * 0.01 + time) * 50 + Math.cos(x * 0.02 + time * 1.5) * 25;
+                        if (x === 0) {
+                            ctx.moveTo(x, y);
+                        } else {
+                            ctx.lineTo(x, y);
+                        }
+                    }
+                    
+                    ctx.stroke();
+                    
+                    animationFrame = requestAnimationFrame(drawWaveform);
+                }
+                
+                function drawParticles() {
+                    ctx.clearRect(0, 0, quantumGrid.width, quantumGrid.height);
+                    
+                    const time = Date.now() * 0.001;
+                    const particles = 100;
+                    
+                    for (let i = 0; i < particles; i++) {
+                        const x = quantumGrid.width / 2 + Math.cos(i * 0.1 + time) * (i * 2);
+                        const y = quantumGrid.height / 2 + Math.sin(i * 0.1 + time) * (i * 2);
+                        const size = 2 + Math.sin(i * 0.1 + time) * 2;
+                        
+                        ctx.fillStyle = i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)';
+                        ctx.beginPath();
+                        ctx.arc(x, y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        if (i > 0) {
+                            const prevX = quantumGrid.width / 2 + Math.cos((i - 1) * 0.1 + time) * ((i - 1) * 2);
+                            const prevY = quantumGrid.height / 2 + Math.sin((i - 1) * 0.1 + time) * ((i - 1) * 2);
+                            
+                            ctx.strokeStyle = i % 2 === 0 ? 'var(--accent-primary)' : 'var(--accent-secondary)';
+                            ctx.globalAlpha = 0.3;
+                            ctx.beginPath();
+                            ctx.moveTo(prevX, prevY);
+                            ctx.lineTo(x, y);
+                            ctx.stroke();
+                            ctx.globalAlpha = 1;
+                        }
+                    }
+                    
+                    animationFrame = requestAnimationFrame(drawParticles);
+                }
+            }
+        });</script></body></html>
