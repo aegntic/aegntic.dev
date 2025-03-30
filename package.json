@@ -1,0 +1,35 @@
+{
+  "name": "aegntic-quantum-interface",
+  "version": "0.1.0",
+  "description": "Quantum field visualization system with a tartarian-inspired interface",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "webpack serve --open --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "quantum",
+    "visualization",
+    "WebGL",
+    "tensor",
+    "field"
+  ],
+  "author": "AEGNTIC Team",
+  "license": "MIT",
+  "dependencies": {
+    "three": "^0.152.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "@babel/preset-env": "^7.21.5",
+    "babel-loader": "^9.1.2",
+    "copy-webpack-plugin": "^11.0.0",
+    "css-loader": "^6.7.3",
+    "html-webpack-plugin": "^5.5.1",
+    "style-loader": "^3.3.2",
+    "webpack": "^5.82.1",
+    "webpack-cli": "^5.1.1",
+    "webpack-dev-server": "^4.15.0"
+  }
+}
